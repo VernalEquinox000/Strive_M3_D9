@@ -134,8 +134,10 @@
 
       window.onload = async () => {
         let urlParams = new URLSearchParams(window.location.search);
+        console.log(urlParams);
 
         id = urlParams.get("id");
+        console.log(id);
         try {
           let response = await fetch(
             "https://striveschool-api.herokuapp.com/api/product/" + id,

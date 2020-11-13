@@ -92,7 +92,6 @@
       </div>
     </div>
     <script>
-      let products = [];
       window.onload = async () => {
         let currentProducts = document.querySelector("#currentProducts");
         try {
@@ -106,7 +105,7 @@
               },
             }
           );
-          products = await response.json();
+          let products = await response.json();
           console.log(products);
 
           /////////////

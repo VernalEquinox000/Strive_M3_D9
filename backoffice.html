@@ -184,33 +184,59 @@
               >
                 Submit product
               </button>
+
+              <span
+                class="spinner-border spinner-border-sm d-none"
+                role="status"
+                aria-hidden="true"
+                id="loadingSpinner"
+              ></span>
             </div>
           </form>
         </div>
       </div>
     </div>
 
-    <!--finishing the copied part-->
-
     <script>
+      //we create this window.onload
+      window.onload = async () => {
+        let urlParams = new URLSearchParams(window.location.search);
+        id = urlParams.get("id");
+        console.log(id);
+        //will retrieve the parameter from the search bar
+        //id will be null if I create new events but will have content if I come from index/details
+        if (id) {
+          //if id not null, we go ahead to edit the new event
+          //otherwise we fill a new one
+          let response = await fetch(
+            "https://striveschool-api.herokuapp.com/api/product/" + id,
+            {
+              method: "GET",
+              headers: {
+                Authorization:
+                  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZmFiZWMwMTRiY2RlMTAwMTc2MTZhZTQiLCJpYXQiOjE2MDUxOTIxMzIsImV4cCI6MTYwNjQwMTczMn0.vNzVEWvdvSoQVxyBhey01H7IMxOsoyRVHB--axl5SWo ",
+              },
+            }
+          );
+          let product = await response.json(); // transforming the response body in an usable object, asyncronous operation!
+          document.querySelector("#name").value = product.name;
+          document.querySelector("#description").value = product.description;
+          document.querySelector("#brand").value = product.brand;
+          document.querySelector("#img-url").value = product.imageUrl;
+          parseFloat(document.querySelector("#price")).value = product.price;
+        }
+      };
+
       const handleAddProduct = (e) => {
-        e.preventDefault(); // preventing the default browser event handling
+        e.preventDefault();
         addProduct();
       };
 
       const addProduct = async () => {
-        let myProduct = {
-          /* _id: "", //SERVER GENERATED
-          name: "banana",
-          description: "fruit", //REQUIRED
-          brand: "chiquita", //REQUIRED
-          imageUrl: "https://www.chiquita.com/banana.jpg",
-          price: 100, //REQUIRED
-           userId: "", //SERVER GENERATED
-      createdA: "", //SERVER GENERATED
-      updatedAt: "", //SERVER GENERATED
-      __v: "",  */
+        let spinner = document.querySelector("#loadingSpinner");
+        spinner.classList.toggle("d-none"); // showing the spinner
 
+        let myProduct = {
           name: document.querySelector("#name").value,
           description: document.querySelector("#description").value,
           brand: document.querySelector("#brand").value,
@@ -219,30 +245,47 @@
         };
 
         try {
-          let response = await fetch(
-            "https://striveschool-api.herokuapp.com/api/product/",
-            {
-              method: "POST", // declaring the CRUD method
-              body: JSON.stringify(myProduct), // we need to stringify the JS object in order to send it
-              //^^we can NOT send objects! so we use json.stringify
-              headers: {
-                Authorization:
-                  "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZmFiZWMwMTRiY2RlMTAwMTc2MTZhZTQiLCJpYXQiOjE2MDUxOTIxMzIsImV4cCI6MTYwNjQwMTczMn0.vNzVEWvdvSoQVxyBhey01H7IMxOsoyRVHB--axl5SWo ",
+          let response;
 
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          console.log(response);
-          //this thing is not mandatory but need it for a POST
+          if (id) {
+            response = await fetch(
+              "https://striveschool-api.herokuapp.com/api/product/" + id,
+              {
+                method: "PUT", // declaring the CRUD method
+                body: JSON.stringify(myProduct),
+                headers: new Headers({
+                  Authorization:
+                    "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZmFiZWMwMTRiY2RlMTAwMTc2MTZhZTQiLCJpYXQiOjE2MDUxOTIxMzIsImV4cCI6MTYwNjQwMTczMn0.vNzVEWvdvSoQVxyBhey01H7IMxOsoyRVHB--axl5SWo ",
+
+                  "Content-Type": "application/json",
+                }),
+              }
+            );
+          } else {
+            response = await fetch(
+              "https://striveschool-api.herokuapp.com/api/product/",
+              {
+                method: "POST",
+                body: JSON.stringify(myProduct),
+                headers: new Headers({
+                  Authorization:
+                    "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI1ZmFiZWMwMTRiY2RlMTAwMTc2MTZhZTQiLCJpYXQiOjE2MDUxOTIxMzIsImV4cCI6MTYwNjQwMTczMn0.vNzVEWvdvSoQVxyBhey01H7IMxOsoyRVHB--axl5SWo ",
+
+                  "Content-Type": "application/json",
+                }),
+              }
+            );
+          }
 
           if (response.ok) {
-            // checking the ok property which stores the successful result of the operation
-            alert("Event created successfully");
+            spinner.classList.toggle("d-none"); // hiding the spinner
+            alert(`Product ${id ? "updated" : "created"} successfully`);
             location.assign("index.html");
-            //maybe need to be window.location, anyway after the alert, this will send back to the index
           } else {
+            spinner.classList.toggle("d-none"); // hiding the spinner
             alert("Something went wrong!");
+            let error = await response.json(); //with these two lines of code
+            console.log(error); // you can read the message of the response saying what's missing
           }
         } catch (error) {
           console.log(error);
